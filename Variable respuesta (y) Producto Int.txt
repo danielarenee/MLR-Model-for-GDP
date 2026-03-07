@@ -1,0 +1,6 @@
+Variable respuesta (y): Producto Interno Bruto , serie desestacionalizada, variación trimestral a precios del 2018Producto Interno Bruto , serie desestacionalizada, variación trimestral a precios del 2018
+
+Variables regresoras (x):
+1.	Inflación subyacente. Ruta: índice de precios-> índice Nacional de Precios al Consumidor .  Base segunda quincena Julio 2018 -> Mensual -> Inflación Mensual ->  Inflación subyacente
+2.	Inflación no subyacente. Ruta: índice de precios-> índice Nacional de Precios al Consumidor .  Base segunda quincena Julio 2018 -> Mensual -> Inflación Mensual ->  Inflación no subyacente 
+3.
