@@ -3,4 +3,12 @@ Variable respuesta (y): Producto Interno Bruto , serie desestacionalizada, varia
 Variables regresoras (x):
 1.	Inflación subyacente. Ruta: índice de precios-> índice Nacional de Precios al Consumidor .  Base segunda quincena Julio 2018 -> Mensual -> Inflación Mensual ->  Inflación subyacente
 2.	Inflación no subyacente. Ruta: índice de precios-> índice Nacional de Precios al Consumidor .  Base segunda quincena Julio 2018 -> Mensual -> Inflación Mensual ->  Inflación no subyacente 
-3.
+3.Tasa de desocupación. Ruta: Tasas de ocupación , des.., y sub... ( resultados...)-> series desestacionalizadas -> Nacional -> Tasa de desocupación -> Total -> Serie desestacionalizada -> Variación mensual ( Variación porcentual ), EUM 2026
+4. Tasa de participación  Ruta: Tasas de ocupación , des.., y sub... ( resultados...)-> series desestacionalizadas -> Nacional -> Tasa de participación -> Total -> Serie desestacionalizada -> Variación mensual ( Variación Porcentual) EUM 2026
+5. Total de exportaciones manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic. Ruta -> Sector externo -> Balanza comercial de la industria manufacturera -> Exportaciones -> Total de exportaciones manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic
+6. Total de importantes manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic. Ruta -> Sector externo -> Balanza comercial de la industria manufacturera -> Importaciones -> Total de importantes manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic
+7. 
+8.
+9.
+10.
+
