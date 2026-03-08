@@ -7,8 +7,8 @@ Variables regresoras (x):
 4. Tasa de participación  Ruta: Tasas de ocupación , des.., y sub... ( resultados...)-> series desestacionalizadas -> Nacional -> Tasa de participación -> Total -> Serie desestacionalizada -> Variación mensual ( Variación Porcentual) EUM 2026
 5. Total de exportaciones manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic. Ruta -> Sector externo -> Balanza comercial de la industria manufacturera -> Exportaciones -> Total de exportaciones manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic
 6. Total de importantes manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic. Ruta -> Sector externo -> Balanza comercial de la industria manufacturera -> Importaciones -> Total de importantes manufactureras ( con Maquila ) (Miles de dólares) EUM 2025 Dic
-7. 
-8.
+7. Consumo Turístico Interior. Ruta -> Indicadores económicos de coyuntura -> Actividad turística base 2018 -> series desestacionalizadas y tendencia ciclo -> consumo turístico interior ->total -> serie desestacionalizada -> variación trimestral y porcentual  EUM 2025
+8. Productividad laboral con base en el personal ocupado total dentro de las Empresas constructoras. Ruta -> Indicadores de productividad base 2018 -> Series desestacionalizadas y tend... -> Empresas constructoras -> Productividad laboral con base en el personal ocupado total -> Serie desestacionalizada -> Variación trimestral porcentual EUM 2025 4T
 9.
 10.
 
