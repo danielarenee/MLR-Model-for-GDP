@@ -255,6 +255,125 @@ summary(MR)
 #######################################################################################
 
 
+##Pruebas modelo original 
+ruta_archivo_org<- file.choose()
+df_orig<- read.csv(ruta_archivo_org)
+
+# MODELO EN UNIDADES ORIGINALES
+
+ruta_archivo_org <- file.choose()
+df_orig <- read.csv(ruta_archivo_org)
+
+# Crear x11 COMO COLUMNA de df_orig (NO como variable global)
+df_orig$x11_orig <- df_orig$exportaciones_manufactura - df_orig$importaciones_manufactura
+
+# Modelo reducido en unidades originales
+MR_orig <- lm(PIB ~ tasa_participacion + formacion_bruta_capital_fijo + x11_orig,
+              data = df_orig)
+summary(MR_orig)
+anova(MR_orig)
 
 
+# MODELO ESTANDARIZADO (usa las x4, x7, x11 del inicio)
+
+MR <- lm(PIB ~ x4 + x7 + x11, data = df)
+summary(MR)
+anova(MR)
+
+
+# COMPARACION
+
+cat("=== VERIFICACION DE ESCALAS ===\n")
+cat("Media PIB estandarizado:", mean(df$PIB), "\n")
+cat("Media PIB original:     ", mean(df_orig$PIB), "\n")
+cat("SD PIB estandarizado:   ", sd(df$PIB), "\n")
+cat("SD PIB original:        ", sd(df_orig$PIB), "\n")
+
+cat("\n=== COMPARACION R2 ADJ ===\n")
+cat("R2 adj estandarizado:", summary(MR)$adj.r.squared, "\n")
+cat("R2 adj original:     ", summary(MR_orig)$adj.r.squared, "\n")
+
+
+
+# ============================================
+# VERIFICACIÓN DE SUPUESTOS - MODELO ESTANDARIZADO
+# ============================================
+
+library(lmtest)
+
+cat("========================================\n")
+cat("SUPUESTOS MODELO ESTANDARIZADO (MR)\n")
+cat("========================================\n")
+
+# --- 1. Normalidad ---
+cat("\n--- 1. NORMALIDAD DE RESIDUOS ---\n")
+shapiro.test(residuals(MR))
+
+par(mfrow = c(1, 2))
+hist(residuals(MR), breaks = 15, main = "Histograma de Residuos (Estandarizado)",
+     xlab = "Residuos", col = "steelblue", border = "white")
+qqnorm(residuals(MR), pch = 19, col = "steelblue",
+       main = "QQ-Plot (Estandarizado)")
+qqline(residuals(MR), col = "red", lwd = 2)
+
+# --- 2. Homocedasticidad ---
+cat("\n--- 2. HOMOCEDASTICIDAD ---\n")
+bptest(MR)
+
+par(mfrow = c(1, 1))
+plot(fitted(MR), residuals(MR), pch = 19, col = "steelblue",
+     main = "Residuos vs Ajustados (Estandarizado)",
+     xlab = "Valores ajustados", ylab = "Residuos")
+abline(h = 0, col = "red", lty = 2)
+
+# --- 3. Independencia ---
+cat("\n--- 3. INDEPENDENCIA ---\n")
+cat("Durbin-Watson (autocorrelacion orden 1):\n")
+dwtest(MR)
+
+cat("\nLjung-Box (4 rezagos, 1 ano):\n")
+Box.test(residuals(MR), lag = 4, type = "Ljung-Box")
+
+cat("\nLjung-Box (8 rezagos, 2 anos):\n")
+Box.test(residuals(MR), lag = 8, type = "Ljung-Box")
+
+# ============================================
+# VERIFICACIÓN DE SUPUESTOS - MODELO ORIGINAL
+# ============================================
+
+cat("\n\n========================================\n")
+cat("SUPUESTOS MODELO ORIGINAL (MR_orig)\n")
+cat("========================================\n")
+
+# --- 1. Normalidad ---
+cat("\n--- 1. NORMALIDAD DE RESIDUOS ---\n")
+shapiro.test(residuals(MR_orig))
+
+par(mfrow = c(1, 2))
+hist(residuals(MR_orig), breaks = 15, main = "Histograma de Residuos (Original)",
+     xlab = "Residuos", col = "steelblue", border = "white")
+qqnorm(residuals(MR_orig), pch = 19, col = "steelblue",
+       main = "QQ-Plot (Original)")
+qqline(residuals(MR_orig), col = "red", lwd = 2)
+
+# --- 2. Homocedasticidad ---
+cat("\n--- 2. HOMOCEDASTICIDAD ---\n")
+bptest(MR_orig)
+
+par(mfrow = c(1, 1))
+plot(fitted(MR_orig), residuals(MR_orig), pch = 19, col = "steelblue",
+     main = "Residuos vs Ajustados (Original)",
+     xlab = "Valores ajustados", ylab = "Residuos")
+abline(h = 0, col = "red", lty = 2)
+
+# --- 3. Independencia ---
+cat("\n--- 3. INDEPENDENCIA ---\n")
+cat("Durbin-Watson (autocorrelacion orden 1):\n")
+dwtest(MR_orig)
+
+cat("\nLjung-Box (4 rezagos, 1 ano):\n")
+Box.test(residuals(MR_orig), lag = 4, type = "Ljung-Box")
+
+cat("\nLjung-Box (8 rezagos, 2 anos):\n")
+Box.test(residuals(MR_orig), lag = 8, type = "Ljung-Box")
 
