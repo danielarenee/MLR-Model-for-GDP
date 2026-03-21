@@ -21,7 +21,12 @@ library(car)
 # =====================================================
 
 # datos
-df <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales.csv")
+
+##df <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales.csv")
+##head(df)
+#Ruta Mario abajo
+ruta <- file.choose()
+df<- read.csv(ruta)
 head(df)
 
 Ya  <- df$exportaciones_manufactureras
@@ -112,8 +117,13 @@ corrplot(correl_red, method = "color", type = "upper",
 # =====================================================
 
 # datos
-df2 <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2.csv")
+##df2 <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2.csv")
+##head(df2)
+#Ruta Mario
+ruta1<- file.choose()
+df2<- read.csv(ruta1)
 head(df2)
+
 
 Yd  <- df2$exportaciones_manufactureras
 x1d <- df2$form_bruta_cap_fijo
@@ -176,7 +186,7 @@ x5 <- df2$vix
 x6 <- df2$remesas
 x7 <- df2$inflacion
 
-#=========================== 2. SELECCION DE MODELOS ===========================
+
 
 #=========================== 2. SELECCIÓN DE MODELOS ===========================
 
@@ -289,7 +299,7 @@ summary(step_II)
 
 modelo_IIa <- lm(lnY ~ lnx1 + lnx2 + lnx4 + lnx6)
 summary(modelo_IIa)
-vif(modelo_IIa) # VIF de lnx1 rozando a 5... hay que checar multicol.
+vif(modelo_IIa) # VIF de lnx1 rozando a 5... hay que checar multicol. 
 
 # -- MODELO III: Log-Lin --------------------------------------------------------
 # Interpretación: un incremento de una unidad en xj produce un cambio
@@ -358,13 +368,18 @@ vif(modelo_IIIc)
 # la ventaja es que tenemos un modelo simple de pocas variables (principio de 
 # parsimonia), que además explica bien. hay que verificar supuestos !
 
-# -- MODELO IV: Estandarizado --------------------------------------------------
-# Interpretación: Beta_j = cambio en desviaciones estándar de Y por cada 
-# desviación estándar de cambio en xj. 
 
-df_std <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2_std.csv")
+
+# -- MODELO IV: Estandarizado (Fuerza relativa) --------------------------------
+# Interpretación: Un incremento de 1 desviación estándar en xj produce
+# un cambio de Beta_j desviaciones estándar en Y. (Regresión al origen)
+
+# Ruta Mario
+ruta2 <- file.choose()
+df_std <- read.csv(ruta2)
 head(df_std)
 
+# 1. ¡PRIMERO DEFINIMOS LAS VARIABLES!
 Ys  <- df_std$exportaciones_manufactureras
 x1s <- df_std$form_bruta_cap_fijo
 x2s <- df_std$ind_tipo_cambio_real
@@ -374,43 +389,48 @@ x5s <- df_std$vix
 x6s <- df_std$remesas
 x7s <- df_std$inflacion
 
-modelo_IV <- lm(Ys ~ x1s + x2s + x3s + x4s + x5s + x6s + x7s)
+# 2. LUEGO CORREMOS EL MODELO (Regresión al origen con 0 +)
+modelo_IV <- lm(Ys ~ 0 + x1s + x2s + x3s + x4s + x5s + x6s + x7s)
 summary(modelo_IV)
 anova(modelo_IV)
 vif(modelo_IV)
 
-# Pruebas F parciales ------------- 
-sin_x1s <- lm(Ys ~ x2s + x3s + x4s + x5s + x6s + x7s)
-sin_x2s <- lm(Ys ~ x1s + x3s + x4s + x5s + x6s + x7s)
-sin_x3s <- lm(Ys ~ x1s + x2s + x4s + x5s + x6s + x7s)
-sin_x4s <- lm(Ys ~ x1s + x2s + x3s + x5s + x6s + x7s)
-sin_x5s <- lm(Ys ~ x1s + x2s + x3s + x4s + x6s + x7s)
-sin_x6s <- lm(Ys ~ x1s + x2s + x3s + x4s + x5s + x7s)
-sin_x7s <- lm(Ys ~ x1s + x2s + x3s + x4s + x5s + x6s)
+# 3. Pruebas F parciales ------------- 
+sin_x1s <- lm(Ys ~ 0 + x2s + x3s + x4s + x5s + x6s + x7s)
+sin_x2s <- lm(Ys ~ 0 + x1s + x3s + x4s + x5s + x6s + x7s)
+sin_x3s <- lm(Ys ~ 0 + x1s + x2s + x4s + x5s + x6s + x7s)
+sin_x4s <- lm(Ys ~ 0 + x1s + x2s + x3s + x5s + x6s + x7s)
+sin_x5s <- lm(Ys ~ 0 + x1s + x2s + x3s + x4s + x6s + x7s)
+sin_x6s <- lm(Ys ~ 0 + x1s + x2s + x3s + x4s + x5s + x7s)
+sin_x7s <- lm(Ys ~ 0 + x1s + x2s + x3s + x4s + x5s + x6s)
 
 cat("F parcial x1s (FBCF):\n");       print(anova(sin_x1s, modelo_IV))
 cat("F parcial x2s (ITCR):\n");       print(anova(sin_x2s, modelo_IV))
-cat("F parcial x3s (Fed Funds):\n");   print(anova(sin_x3s, modelo_IV))
+cat("F parcial x3s (Fed Funds):\n");  print(anova(sin_x3s, modelo_IV))
 cat("F parcial x4s (WTI):\n");        print(anova(sin_x4s, modelo_IV))
 cat("F parcial x5s (VIX):\n");        print(anova(sin_x5s, modelo_IV))
-cat("F parcial x6s (Remesas):\n");     print(anova(sin_x6s, modelo_IV))
-cat("F parcial x7s (Inflación):\n");   print(anova(sin_x7s, modelo_IV))
+cat("F parcial x6s (Remesas):\n");    print(anova(sin_x6s, modelo_IV))
+cat("F parcial x7s (Inflación):\n");  print(anova(sin_x7s, modelo_IV))
 
-# Criterios de evaluación ------------- 
+# 4. Criterios de evaluación ------------- 
 cat("R^2 adj  =", summary(modelo_IV)$adj.r.squared, "\n")
-cat("AIC     =", AIC(modelo_IV), "\n")
-cat("BIC     =", BIC(modelo_IV), "\n")
+cat("AIC      =", AIC(modelo_IV), "\n")
+cat("BIC      =", BIC(modelo_IV), "\n")
 
-# Stepwise ------------- 
-modelo_nulo_IV <- lm(Ys ~ 1)
+# 5. Stepwise ------------- 
+# Nota: El modelo nulo sin intercepto se define explícitamente con el cero
+modelo_nulo_IV <- lm(Ys ~ 0)
 step_IV <- step(modelo_nulo_IV,
                 scope = list(lower = modelo_nulo_IV, upper = modelo_IV),
                 direction = "both", trace = 1)
 summary(step_IV)
 
-# igual al lin-lin
+# 6. Obtenemos el modelo IVa, donde se excluye x2s y quedan 6 variables.
+# Al estar estandarizado y al origen, los coeficientes miden el impacto relativo.
 
-
+modelo_IVa <- lm(Ys ~ 0 + x1s + x3s + x4s + x5s + x6s + x7s)
+summary(modelo_IVa)
+vif(modelo_IVa)
 #======================== 3. INTERPRETACIÓN DE MODELOS =========================
 
 # -- Modelo Ia (Lin-Lin) -------------------------------------------------------
@@ -486,13 +506,447 @@ cat("Predicción:\n"); print(exp(pred_III))
 # lo cual confirma que es mejor modelo. Aparte de esto, ya sabíamos que tiene
 # menor BIC
 
+
+#no tiene caso hacerlo para el esatandarizado ya que todas las medias son 0
+
 #======================== 4. VALIDACIÓN DE MODELOS =========================
 
+#MODELO Ia (Lin-Lin)
+library(lmtest)
+
+# 1. Extraer residuales
+res_Ia <- residuals(modelo_Ia)
+
+# 2. Normalidad (Shapiro-Wilk)
+# H0: Errores normales | Queremos p > 0.05
+cat("\n--- NORMALIDAD ---\n")
+print(shapiro.test(res_Ia))
+
+# 3. Homocedasticidad (Breusch-Pagan)
+# H0: Varianza constante | Queremos p > 0.05
+cat("\n--- HOMOCEDASTICIDAD ---\n")
+print(bptest(modelo_Ia))
+
+# 4. Autocorrelación Global (Ljung-Box)
+# H0: Independencia (Ruido Blanco) | Queremos p > 0.05
+# Usamos lag = 4 por ser datos trimestrales
+cat("\n--- AUTOCORRELACIÓN (Ljung-Box, lag=4) ---\n")
+print(Box.test(res_Ia, lag = 4, type = "Ljung-Box"))
+
+# 5. Visualización del Correlograma (ACF)
+# Las barras deben quedarse dentro de las líneas punteadas azules
+cat("\n--- CORRELOGRAMA VISUAL ---\n")
+acf(res_Ia, main = "ACF de los Residuales - Modelo Ia")
+# --- DIAGNÓSTICO INTEGRAL DE INFLUENCIA (MODELO Ia) ---
+library(car)
+
+# A) Cálculo de métricas
+n <- nrow(df)
+k <- 6 # Variables independientes en Modelo Ia
+res_std <- rstandard(modelo_Ia)      # Estandarizados
+res_stud <- rstudent(modelo_Ia)      # Estudentizados
+hats <- hatvalues(modelo_Ia)         # Leverages
+cooks <- cooks.distance(modelo_Ia)   # Distancia de Cook
+
+# B) Definición de Umbrales Teóricos (Notas de Clase)
+umbral_res <- 3                       # Regla de dedo para residuos grandes
+umbral_hat <- 2 * (k + 1) / n         # Regla 2p/n
+umbral_cook <- 4 / (n - k - 1)        # Regla 4/(n-k-1)
+
+# C) Identificación de observaciones
+obs_outliers <- which(abs(res_stud) > umbral_res)
+obs_leverage <- which(hats > umbral_hat)
+obs_cook <- which(cooks > umbral_cook)
+
+# D) Reporte Consolidado
+cat("\n===========================================")
+cat("\n   REPORTE DE OBSERVACIONES PROBLEMÁTICAS")
+cat("\n===========================================")
+cat("\n1. Outliers Criticos (Estudentizados > 3):", 
+    if(length(obs_outliers)>0) obs_outliers else "Ninguno")
+cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):", 
+    if(length(obs_leverage)>0) obs_leverage else "Ninguno")
+cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):", 
+    if(length(obs_cook)>0) obs_cook else "Ninguno")
+cat("\n===========================================\n")
+
+# Al poner 'id.n=5', R marcará automáticamente las 5 observaciones más peligrosas.
+influencePlot(modelo_Ia, 
+              id=list(method="noteworthy", n=5, cex=0.8, col="red"),
+              main="Gráfico de Influencia: Modelo Ia (Puntos Seleccionados)",
+              xlab="Hat-Values (Leverage)", 
+              ylab="Residuales Estudentizados")
+
+# 2. EL DE PANELES: Gráfico de Influencia por Índice 
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
+
+influenceIndexPlot(modelo_Ia, 
+                   vars = c("Cook", "Studentized", "hat"), 
+                   id = list(n = 5, cex = 0.7, col = "red"), # Marca las 5 más críticas
+                   main = "Diagnóstico por Índice: Modelo Ia")
+
+# Restaurar pantalla a una sola gráfica
+par(mfrow = c(1, 1))
+
+library(lmtest)
+
+# 1. Definimos los "culpables"
+obs_a_eliminar <- c(2, 56, 57, 122, 123)
+
+# Esto fuerza al modelo a recalcularse sin esas filas específicas
+modelo_Ia_limpio <- update(modelo_Ia, subset = -obs_a_eliminar)
+
+# 3. VERIFICACIÓN DE TAMAÑO 
+cat("\n--- VERIFICACIÓN DE DATOS ---")
+cat("\nDatos en Modelo Original:", nobs(modelo_Ia))
+cat("\nDatos en Modelo Limpio:", nobs(modelo_Ia_limpio), "(Debe ser 5 menos)\n")
+
+# --- COMPARACIÓN DE SUPUESTOS (Original vs. Limpio) ---
+
+# A. Comparamos Normalidad (Shapiro-Wilk)
+cat("\n--- NORMALIDAD MODELO ORIGINAL ---")
+print(shapiro.test(residuals(modelo_Ia)))
+cat("\n--- NORMALIDAD MODELO LIMPIO ---")
+print(shapiro.test(residuals(modelo_Ia_limpio)))
+
+# B. Comparamos Homocedasticidad (Breusch-Pagan)
+cat("\n--- HOMOCEDASTICIDAD MODELO ORIGINAL ---")
+print(bptest(modelo_Ia))
+cat("\n--- HOMOCEDASTICIDAD MODELO LIMPIO ---")
+print(bptest(modelo_Ia_limpio))
+
+# C. Comparamos Autocorrelación (Ljung-Box)
+cat("\n--- AUTOCORRELACIÓN MODELO ORIGINAL ---")
+print(Box.test(residuals(modelo_Ia), lag = 4, type = "Ljung-Box"))
+cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
+print(Box.test(residuals(modelo_Ia_limpio), lag = 4, type = "Ljung-Box"))
+#Obs que mejora normalidad y homocedasticidad, autocorrelación noup
 
 
+# =========================================================================
+# VALIDACIÓN DE SUPUESTOS LOG-LOG (Modelo IIa)
+# =========================================================================
+library(lmtest)
+
+# 1. Extraer residuales
+res_IIa <- residuals(modelo_IIa)
+
+# 2. Normalidad (Shapiro-Wilk)
+cat("\n--- 1. NORMALIDAD (Modelo IIa) ---\n")
+print(shapiro.test(res_IIa))
+
+# 3. Homocedasticidad (Breusch-Pagan)
+cat("\n--- 2. HOMOCEDASTICIDAD (Modelo IIa) ---\n")
+print(bptest(modelo_IIa))
+
+# 4. Autocorrelación Global (Ljung-Box)
+# H0: Independencia | Queremos p > 0.05
+cat("\n--- 3. AUTOCORRELACIÓN (Modelo IIa) ---\n")
+print(Box.test(res_IIa, lag = 4, type = "Ljung-Box"))
+
+# 5. Visualización del Correlograma
+par(mfrow = c(1, 1))
+acf(res_IIa, main = "ACF de los Residuales - Modelo IIa (Log-Log)")
 
 
+# ---DIAGNÓSTICO INTEGRAL DE INFLUENCIA (MODELO IIa: Log-Log) ---
+library(car)
+
+# A) Cálculo de métricas
+n <- nobs(modelo_IIa)                # Aseguramos el tamaño de muestra exacto del modelo
+k <- 4                               # Variables independientes en Modelo IIa
+res_std <- rstandard(modelo_IIa)     # Estandarizados
+res_stud <- rstudent(modelo_IIa)     # Estudentizados
+hats <- hatvalues(modelo_IIa)        # Leverages
+cooks <- cooks.distance(modelo_IIa)  # Distancia de Cook
+
+# B) Definición de Umbrales Teóricos
+umbral_res <- 3                       # Regla de dedo para residuos grandes
+umbral_hat <- 2 * (k + 1) / n         # Regla 2p/n
+umbral_cook <- 4 / (n - k - 1)        # Regla 4/(n-k-1)
+
+# C) Identificación de observaciones
+obs_outliers <- which(abs(res_stud) > umbral_res)
+obs_leverage <- which(hats > umbral_hat)
+obs_cook <- which(cooks > umbral_cook)
+
+# D) Reporte Consolidado
+cat("\n===========================================")
+cat("\n   REPORTE DE OBSERVACIONES PROBLEMÁTICAS (Log-Log)")
+cat("\n===========================================")
+cat("\n1. Outliers Criticos (Estudentizados > 3):", 
+    if(length(obs_outliers)>0) obs_outliers else "Ninguno")
+cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):", 
+    if(length(obs_leverage)>0) obs_leverage else "Ninguno")
+cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):", 
+    if(length(obs_cook)>0) obs_cook else "Ninguno")
+cat("\n===========================================\n")
+
+# Gráfico 1: El que te gustó (Puntos seleccionados, sin burbujas gigantes)
+influencePlot(modelo_IIa, 
+              id=list(method="noteworthy", n=5, cex=0.8, col="red"),
+              main="Gráfico de Influencia: Modelo IIa (Log-Log)",
+              xlab="Hat-Values (Leverage)", 
+              ylab="Residuales Estudentizados")
+
+# Gráfico 2: El de Paneles por Índice (Súper claro)
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
+
+influenceIndexPlot(modelo_IIa, 
+                   vars = c("Cook", "Studentized", "hat"), 
+                   id = list(n = 5, cex = 0.7, col = "red"), 
+                   main = "Diagnóstico por Índice: Modelo IIa")
+
+# Restaurar pantalla a una sola gráfica
+par(mfrow = c(1, 1))
+
+# --- PASO 2: LIMPIEZA Y COMPARACIÓN DE SUPUESTOS (MODELO IIa: Log-Log) ---
+library(lmtest)
+
+# 1. Definimos los "culpables" extraídos de la Distancia de Cook
+obs_a_eliminar_IIa <- c(2, 3, 4, 57)
+
+# 2. Reajustamos el modelo limpio sin esas 4 filas
+modelo_IIa_limpio <- update(modelo_IIa, subset = -obs_a_eliminar_IIa)
+
+# 3. VERIFICACIÓN DE TAMAÑO 
+cat("\n--- VERIFICACIÓN DE DATOS ---")
+cat("\nDatos en Modelo Original:", nobs(modelo_IIa))
+cat("\nDatos en Modelo Limpio:", nobs(modelo_IIa_limpio), "(Debe ser 4 menos)\n")
+
+# --- COMPARACIÓN DE SUPUESTOS (Original vs. Limpio) ---
+
+# A. Normalidad (Shapiro-Wilk)
+cat("\n--- NORMALIDAD MODELO ORIGINAL ---")
+print(shapiro.test(residuals(modelo_IIa)))
+cat("\n--- NORMALIDAD MODELO LIMPIO ---")
+print(shapiro.test(residuals(modelo_IIa_limpio)))
+
+# B. Homocedasticidad (Breusch-Pagan)
+cat("\n--- HOMOCEDASTICIDAD MODELO ORIGINAL ---")
+print(bptest(modelo_IIa))
+cat("\n--- HOMOCEDASTICIDAD MODELO LIMPIO ---")
+print(bptest(modelo_IIa_limpio))
+
+# C. Autocorrelación (Ljung-Box)
+cat("\n--- AUTOCORRELACIÓN MODELO ORIGINAL ---")
+print(Box.test(residuals(modelo_IIa), lag = 4, type = "Ljung-Box"))
+cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
+print(Box.test(residuals(modelo_IIa_limpio), lag = 4, type = "Ljung-Box"))
+
+# --- LIMPIEZA Y COMPARACIÓN DE SUPUESTOS (MODELO IIa: Log-Log) ---
+library(lmtest)
+
+# 1. Definimos los "culpables" extraídos de la Distancia de Cook
+obs_a_eliminar_IIa <- c(2, 3, 4, 57)
+
+# 2. Reajustamos el modelo limpio sin esas 4 filas
+modelo_IIa_limpio <- update(modelo_IIa, subset = -obs_a_eliminar_IIa)
+
+# 3. VERIFICACIÓN DE TAMAÑO 
+cat("\n--- VERIFICACIÓN DE DATOS ---")
+cat("\nDatos en Modelo Original:", nobs(modelo_IIa))
+cat("\nDatos en Modelo Limpio:", nobs(modelo_IIa_limpio), "(Debe ser 4 menos)\n")
+
+# --- COMPARACIÓN DE SUPUESTOS (Original vs. Limpio) ---
+
+# A. Normalidad (Shapiro-Wilk)
+cat("\n--- NORMALIDAD MODELO ORIGINAL ---")
+print(shapiro.test(residuals(modelo_IIa)))
+cat("\n--- NORMALIDAD MODELO LIMPIO ---")
+print(shapiro.test(residuals(modelo_IIa_limpio)))
+
+# B. Homocedasticidad (Breusch-Pagan)
+cat("\n--- HOMOCEDASTICIDAD MODELO ORIGINAL ---")
+print(bptest(modelo_IIa))
+cat("\n--- HOMOCEDASTICIDAD MODELO LIMPIO ---")
+print(bptest(modelo_IIa_limpio))
+
+# C. Autocorrelación (Ljung-Box)
+cat("\n--- AUTOCORRELACIÓN MODELO ORIGINAL ---")
+print(Box.test(residuals(modelo_IIa), lag = 4, type = "Ljung-Box"))
+cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
+print(Box.test(residuals(modelo_IIa_limpio), lag = 4, type = "Ljung-Box"))
+
+# =========================================================================
+# VALIDACIÓN DE SUPUESTOS LOG-LIN (Modelo IIIc)
+# =========================================================================
+library(lmtest)
+
+# 1. Extraer residuales
+res_IIIc <- residuals(modelo_IIIc)
+
+# 2. Normalidad (Shapiro-Wilk)
+cat("\n--- 1. NORMALIDAD (Modelo IIIc) ---\n")
+print(shapiro.test(res_IIIc))
+
+# 3. Homocedasticidad (Breusch-Pagan)
+cat("\n--- 2. HOMOCEDASTICIDAD (Modelo IIIc) ---\n")
+print(bptest(modelo_IIIc))
+
+# 4. Autocorrelación Global (Ljung-Box, lag=4)
+cat("\n--- 3. AUTOCORRELACIÓN (Modelo IIIc) ---\n")
+print(Box.test(res_IIIc, lag = 4, type = "Ljung-Box"))
+
+# 5. Visualización del Correlograma
+par(mfrow = c(1, 1))
+acf(res_IIIc, main = "ACF de los Residuales - Modelo IIIc (Log-Lin)")
+# --- DIAGNÓSTICO INTEGRAL DE INFLUENCIA (MODELO IIIc: Log-Lin) ---
+library(car)
+
+# A) Cálculo de métricas
+n <- nobs(modelo_IIIc)               
+k <- 4                               # Variables independientes en Modelo IIIc (x1, x3, x6, x7)
+res_std <- rstandard(modelo_IIIc)    
+res_stud <- rstudent(modelo_IIIc)    
+hats <- hatvalues(modelo_IIIc)       
+cooks <- cooks.distance(modelo_IIIc) 
+
+# B) Definición de Umbrales Teóricos
+umbral_res <- 3                       
+umbral_hat <- 2 * (k + 1) / n         
+umbral_cook <- 4 / (n - k - 1)        
+
+# C) Identificación de observaciones
+obs_outliers <- which(abs(res_stud) > umbral_res)
+obs_leverage <- which(hats > umbral_hat)
+obs_cook <- which(cooks > umbral_cook)
+
+# D) Reporte Consolidado
+cat("\n===========================================")
+cat("\n   REPORTE DE OBSERVACIONES PROBLEMÁTICAS (Log-Lin)")
+cat("\n===========================================")
+cat("\n1. Outliers Criticos (Estudentizados > 3):", 
+    if(length(obs_outliers)>0) obs_outliers else "Ninguno")
+cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):", 
+    if(length(obs_leverage)>0) obs_leverage else "Ninguno")
+cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):", 
+    if(length(obs_cook)>0) obs_cook else "Ninguno")
+cat("\n===========================================\n")
+
+# Gráfico 1: Puntos de Influencia
+influencePlot(modelo_IIIc, 
+              id=list(method="noteworthy", n=5, cex=0.8, col="red"),
+              main="Gráfico de Influencia: Modelo IIIc (Log-Lin)",
+              xlab="Hat-Values (Leverage)", 
+              ylab="Residuales Estudentizados")
+
+# Gráfico 2: Paneles por Índice
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
+influenceIndexPlot(modelo_IIIc, 
+                   vars = c("Cook", "Studentized", "hat"), 
+                   id = list(n = 5, cex = 0.7, col = "red"), 
+                   main = "Diagnóstico por Índice: Modelo IIIc")
+par(mfrow = c(1, 1))
+
+# --- LIMPIEZA Y COMPARACIÓN DE SUPUESTOS (MODELO IIIc: Log-Lin) ---
+library(lmtest)
+
+# 1. Extraemos a los "culpables" directo de la memoria de R
+obs_a_eliminar_IIIc <- as.numeric(names(obs_cook))
+
+# 2. Reajustamos el modelo limpio sin esas 10 filas
+modelo_IIIc_limpio <- update(modelo_IIIc, subset = -obs_a_eliminar_IIIc)
+
+# 3. VERIFICACIÓN DE TAMAÑO 
+cat("\n--- VERIFICACIÓN DE DATOS ---")
+cat("\nDatos en Modelo Original:", nobs(modelo_IIIc))
+cat("\nDatos en Modelo Limpio:", nobs(modelo_IIIc_limpio), "(Debe ser", length(obs_a_eliminar_IIIc), "menos)\n")
+
+# --- COMPARACIÓN DE SUPUESTOS (Original vs. Limpio) ---
+
+# A. Normalidad (Shapiro-Wilk)
+cat("\n--- NORMALIDAD MODELO ORIGINAL ---")
+print(shapiro.test(residuals(modelo_IIIc)))
+cat("\n--- NORMALIDAD MODELO LIMPIO ---")
+print(shapiro.test(residuals(modelo_IIIc_limpio)))
+
+# B. Homocedasticidad (Breusch-Pagan)
+cat("\n--- HOMOCEDASTICIDAD MODELO ORIGINAL ---")
+print(bptest(modelo_IIIc))
+cat("\n--- HOMOCEDASTICIDAD MODELO LIMPIO ---")
+print(bptest(modelo_IIIc_limpio))
+
+# C. Autocorrelación (Ljung-Box)
+cat("\n--- AUTOCORRELACIÓN MODELO ORIGINAL ---")
+print(Box.test(residuals(modelo_IIIc), lag = 4, type = "Ljung-Box"))
+cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
+print(Box.test(residuals(modelo_IIIc_limpio), lag = 4, type = "Ljung-Box"))
+
+#lo afecta quitarle las obs influyentes, lo dejamos como esta 
 
 
+# =========================================================================
+# ANÁLISIS VISUAL DE NORMALIDAD (Izquierda vs Derecha)
+# =========================================================================
+library(ggplot2)
+library(patchwork)
 
+# 1. Función para crear UNA sola gráfica (mitad del panel)
+crear_grafica_individual <- function(residuos, titulo, color_fill, color_line) {
+  # Estandarizamos los residuales
+  df_res <- data.frame(Residuo = scale(residuos))
+  
+  ggplot(df_res, aes(x = Residuo)) +
+    # Histograma
+    geom_histogram(aes(y = after_stat(density)), bins = 20, 
+                   fill = color_fill, color = "white", alpha = 0.7) +
+    # Curva de densidad real del modelo
+    geom_density(color = color_line, linewidth = 1.2) +
+    # Curva de la Distribución Normal Teórica perfecta (Negra punteada)
+    stat_function(fun = dnorm, args = list(mean = 0, sd = 1),
+                  color = "#2C3E50", linetype = "dashed", linewidth = 1) +
+    labs(title = titulo, x = "Residuales Estandarizados", y = "Densidad") +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5, size = 11),
+      panel.grid.minor = element_blank()
+    ) +
+    # Fijamos los ejes para que todas las gráficas sean idénticas en proporción
+    coord_cartesian(xlim = c(-4, 4), ylim = c(0, 0.65)) 
+}
 
+# 2. Función para unir la Izquierda (Original) con la Derecha (Limpio)
+crear_panel_modelo <- function(mod_orig, mod_limp, nombre_modelo) {
+  
+  # Gráfica Izquierda (Roja)
+  p_orig <- crear_grafica_individual(residuals(mod_orig), 
+                                     "1. Original (Con Atípicos)", 
+                                     "#E74C3C", "#C0392B")
+  
+  # Gráfica Derecha (Azul)
+  p_limp <- crear_grafica_individual(residuals(mod_limp), 
+                                     "2. Limpio (Sin Atípicos)", 
+                                     "#2980B9", "#1A5276")
+  
+  # Unimos lado a lado con el símbolo '|' de patchwork
+  panel_completo <- (p_orig | p_limp) + 
+    plot_annotation(
+      title = nombre_modelo,
+      subtitle = "Línea punteada: Distribución Normal Teórica",
+      theme = theme(
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray40")
+      )
+    )
+  
+  return(panel_completo)
+}
+
+# =========================================================================
+# 3. GENERAMOS LAS GRÁFICAS 
+# =========================================================================
+
+# Gráfica 1: Lin-Lin
+panel_Ia <- crear_panel_modelo(modelo_Ia, modelo_Ia_limpio, "Modelo Ia (Lin-Lin)")
+print(panel_Ia)
+
+# Gráfica 2: Log-Log
+# Nota: Aquí van a ver clarísimo por qué el modelo empeoró al limpiarlo
+panel_IIa <- crear_panel_modelo(modelo_IIa, modelo_IIa_limpio, "Modelo IIa (Log-Log)")
+print(panel_IIa)
+
+# Gráfica 3: Log-Lin (El Campeón)
+# Nota: Van a notar que la roja y la azul ya se parecen mucho a la punteada
+panel_IIIc <- crear_panel_modelo(modelo_IIIc, modelo_IIIc_limpio, "Modelo IIIc (Log-Lin)")
+print(panel_IIIc)
