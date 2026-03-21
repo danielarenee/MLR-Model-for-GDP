@@ -942,11 +942,9 @@ panel_Ia <- crear_panel_modelo(modelo_Ia, modelo_Ia_limpio, "Modelo Ia (Lin-Lin)
 print(panel_Ia)
 
 # Gráfica 2: Log-Log
-# Nota: Aquí van a ver clarísimo por qué el modelo empeoró al limpiarlo
 panel_IIa <- crear_panel_modelo(modelo_IIa, modelo_IIa_limpio, "Modelo IIa (Log-Log)")
 print(panel_IIa)
 
 # Gráfica 3: Log-Lin (El Campeón)
-# Nota: Van a notar que la roja y la azul ya se parecen mucho a la punteada
 panel_IIIc <- crear_panel_modelo(modelo_IIIc, modelo_IIIc_limpio, "Modelo IIIc (Log-Lin)")
 print(panel_IIIc)
