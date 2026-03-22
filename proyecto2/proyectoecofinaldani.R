@@ -711,39 +711,6 @@ print(Box.test(residuals(modelo_IIa), lag = 4, type = "Ljung-Box"))
 cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
 print(Box.test(residuals(modelo_IIa_limpio), lag = 4, type = "Ljung-Box"))
 
-# --- LIMPIEZA Y COMPARACIÓN DE SUPUESTOS (MODELO IIa: Log-Log) ---
-library(lmtest)
-
-# 1. Definimos los "culpables" extraídos de la Distancia de Cook
-obs_a_eliminar_IIa <- c(2, 3, 4, 57)
-
-# 2. Reajustamos el modelo limpio sin esas 4 filas
-modelo_IIa_limpio <- update(modelo_IIa, subset = -obs_a_eliminar_IIa)
-
-# 3. VERIFICACIÓN DE TAMAÑO 
-cat("\n--- VERIFICACIÓN DE DATOS ---")
-cat("\nDatos en Modelo Original:", nobs(modelo_IIa))
-cat("\nDatos en Modelo Limpio:", nobs(modelo_IIa_limpio), "(Debe ser 4 menos)\n")
-
-# --- COMPARACIÓN DE SUPUESTOS (Original vs. Limpio) ---
-
-# A. Normalidad (Shapiro-Wilk)
-cat("\n--- NORMALIDAD MODELO ORIGINAL ---")
-print(shapiro.test(residuals(modelo_IIa)))
-cat("\n--- NORMALIDAD MODELO LIMPIO ---")
-print(shapiro.test(residuals(modelo_IIa_limpio)))
-
-# B. Homocedasticidad (Breusch-Pagan)
-cat("\n--- HOMOCEDASTICIDAD MODELO ORIGINAL ---")
-print(bptest(modelo_IIa))
-cat("\n--- HOMOCEDASTICIDAD MODELO LIMPIO ---")
-print(bptest(modelo_IIa_limpio))
-
-# C. Autocorrelación (Ljung-Box)
-cat("\n--- AUTOCORRELACIÓN MODELO ORIGINAL ---")
-print(Box.test(residuals(modelo_IIa), lag = 4, type = "Ljung-Box"))
-cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
-print(Box.test(residuals(modelo_IIa_limpio), lag = 4, type = "Ljung-Box"))
 
 # =========================================================================
 # VALIDACIÓN DE SUPUESTOS LOG-LIN (Modelo IIIc)
@@ -921,3 +888,137 @@ panel_IIIc <- crear_panel_modelo(modelo_IIIc, modelo_IIIc_limpio, "Modelo IIIc (
 print(panel_IIIc)
 
 
+# =========================================================================
+# TABLA COMPARATIVA DE MODELOS FINALES
+# =========================================================================
+# Nota: Este bloque asume que ya están definidos en memoria:
+#   modelo_Ia   (Lin-Lin:  Y ~ x1 + x3 + x4 + x5 + x6 + x7)
+#   modelo_IIa  (Log-Log:  lnY ~ lnx1 + lnx2 + lnx4 + lnx6)
+#   modelo_IIIc (Log-Lin:  lnY ~ x1 + x3 + x6 + x7)
+#   modelo_IVa  (Estand.:  Ys ~ 0 + x1s + x3s + x4s + x5s + x6s + x7s)
+# Pégalo al final de tu script, después de la sección de validación.
+# =========================================================================
+
+# --- 1. Extraer métricas de cada modelo ---
+
+extraer_metricas <- function(modelo, nombre, tipo) {
+  s <- summary(modelo)
+  data.frame(
+    Modelo          = nombre,
+    Tipo            = tipo,
+    Num_Variables   = length(coef(modelo)) - ifelse(attr(modelo$terms, "intercept") == 1, 1, 0),
+    R2              = round(s$r.squared, 4),
+    R2_adj          = round(s$adj.r.squared, 4),
+    AIC             = round(AIC(modelo), 2),
+    BIC             = round(BIC(modelo), 2),
+    Error_Estandar  = round(s$sigma, 4),
+    F_global        = round(s$fstatistic[1], 2),
+    p_valor_F       = format.pval(pf(s$fstatistic[1], s$fstatistic[2], s$fstatistic[3], lower.tail = FALSE), digits = 4)
+  )
+}
+
+tabla <- rbind(
+  extraer_metricas(modelo_Ia,   "Ia (Lin-Lin)",  "Y ~ X"),
+  extraer_metricas(modelo_IIa,  "IIa (Log-Log)", "ln(Y) ~ ln(X)"),
+  extraer_metricas(modelo_IIIc, "IIIc (Log-Lin)","ln(Y) ~ X"),
+  extraer_metricas(modelo_IVa,  "IVa (Estand.)", "Y* ~ X* (sin intercepto)")
+)
+
+rownames(tabla) <- NULL
+
+cat("\n=====================================================\n")
+cat("     TABLA COMPARATIVA DE MODELOS FINALES\n")
+cat("=====================================================\n\n")
+print(tabla, right = FALSE)
+
+# --- 2. Comparación justa entre modelos con la misma respuesta ---
+# 
+# IMPORTANTE: AIC y BIC solo son comparables directamente cuando la 
+# variable respuesta es la misma. Modelo Ia tiene Y, mientras que IIa 
+# y IIIc tienen ln(Y). Para compararlos correctamente, calculamos el 
+# AIC "corregido" que penaliza la transformación logarítmica usando 
+# el Jacobiano: AIC_corregido = AIC_lnY - 2 * sum(log(Y))
+#
+# Referencia: si ln(Y) es la respuesta, la log-verosimilitud en la 
+# escala original de Y requiere sumar el Jacobiano de la transformación.
+
+jacobiano <- -2 * sum(log(Y))  # Corrección por cambio de variable
+
+tabla_comparable <- data.frame(
+  Modelo     = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)"),
+  AIC_orig   = round(c(AIC(modelo_Ia), AIC(modelo_IIa) - jacobiano, AIC(modelo_IIIc) - jacobiano), 2),
+  BIC_orig   = round(c(BIC(modelo_Ia), BIC(modelo_IIa) - jacobiano, BIC(modelo_IIIc) - jacobiano), 2)
+)
+
+cat("\n=====================================================\n")
+cat("  AIC / BIC COMPARABLES (escala de Y original)\n")
+cat("=====================================================\n")
+cat("  (Corrección Jacobiana para modelos con ln(Y))\n\n")
+print(tabla_comparable, right = FALSE, row.names = FALSE)
+
+# --- 3. Ancho de intervalos de predicción (en escala original) ---
+
+# Punto de evaluación: medias de las regresoras de cada modelo
+x0_Ia  <- data.frame(x1=mean(x1), x3=mean(x3), x4=mean(x4), x5=mean(x5), x6=mean(x6), x7=mean(x7))
+x0_IIa <- data.frame(lnx1=mean(lnx1), lnx2=mean(lnx2), lnx4=mean(lnx4), lnx6=mean(lnx6))
+x0_IIIc<- data.frame(x1=mean(x1), x3=mean(x3), x6=mean(x6), x7=mean(x7))
+
+pred_Ia   <- predict(modelo_Ia,   newdata = x0_Ia,   interval = "prediction", level = 0.95)
+pred_IIa  <- predict(modelo_IIa,  newdata = x0_IIa,  interval = "prediction", level = 0.95)
+pred_IIIc <- predict(modelo_IIIc, newdata = x0_IIIc, interval = "prediction", level = 0.95)
+
+# Para IIa y IIIc, transformamos a escala original con exp()
+ancho_pred <- data.frame(
+  Modelo        = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)"),
+  Pred_Inferior = round(c(pred_Ia[,"lwr"], exp(pred_IIa[,"lwr"]), exp(pred_IIIc[,"lwr"])), 2),
+  Pred_Ajustado = round(c(pred_Ia[,"fit"], exp(pred_IIa[,"fit"]), exp(pred_IIIc[,"fit"])), 2),
+  Pred_Superior = round(c(pred_Ia[,"upr"], exp(pred_IIa[,"upr"]), exp(pred_IIIc[,"upr"])), 2),
+  Ancho_IC      = round(c(
+    pred_Ia[,"upr"]       - pred_Ia[,"lwr"],
+    exp(pred_IIa[,"upr"]) - exp(pred_IIa[,"lwr"]),
+    exp(pred_IIIc[,"upr"])- exp(pred_IIIc[,"lwr"])
+  ), 2)
+)
+
+cat("\n=====================================================\n")
+cat("  INTERVALOS DE PREDICCIÓN AL 95% (escala original)\n")
+cat("  Evaluados en las medias de las regresoras\n")
+cat("=====================================================\n\n")
+print(ancho_pred, right = FALSE, row.names = FALSE)
+
+# --- 4. Resumen de validación de supuestos ---
+
+cat("\n=====================================================\n")
+cat("  RESUMEN DE VALIDACIÓN DE SUPUESTOS (p-valores)\n")
+cat("=====================================================\n\n")
+
+resumen_supuestos <- data.frame(
+  Modelo          = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)"),
+  Shapiro_p       = round(c(
+    shapiro.test(residuals(modelo_Ia))$p.value,
+    shapiro.test(residuals(modelo_IIa))$p.value,
+    shapiro.test(residuals(modelo_IIIc))$p.value
+  ), 4),
+  BP_p            = round(c(
+    bptest(modelo_Ia)$p.value,
+    bptest(modelo_IIa)$p.value,
+    bptest(modelo_IIIc)$p.value
+  ), 4),
+  LjungBox_p      = round(c(
+    Box.test(residuals(modelo_Ia),   lag=4, type="Ljung-Box")$p.value,
+    Box.test(residuals(modelo_IIa),  lag=4, type="Ljung-Box")$p.value,
+    Box.test(residuals(modelo_IIIc), lag=4, type="Ljung-Box")$p.value
+  ), 4)
+)
+
+# Agregar columna de diagnóstico (pasa / no pasa al 0.05)
+resumen_supuestos$Normalidad     <- ifelse(resumen_supuestos$Shapiro_p > 0.05, "OK", "FALLA")
+resumen_supuestos$Homocedast     <- ifelse(resumen_supuestos$BP_p > 0.05, "OK", "FALLA")
+resumen_supuestos$Independencia  <- ifelse(resumen_supuestos$LjungBox_p > 0.05, "OK", "FALLA")
+
+print(resumen_supuestos, right = FALSE, row.names = FALSE)
+
+cat("\n=====================================================\n")
+cat("  Nota: 'OK' = no se rechaza H0 al 5%\n")
+cat("        'FALLA' = se rechaza H0 al 5%\n")
+cat("=====================================================\n")
