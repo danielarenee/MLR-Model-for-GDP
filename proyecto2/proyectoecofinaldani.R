@@ -811,7 +811,7 @@ print(Box.test(residuals(modelo_IIIc), lag = 4, type = "Ljung-Box"))
 cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
 print(Box.test(residuals(modelo_IIIc_limpio), lag = 4, type = "Ljung-Box"))
 
-#lo afecta quitarle las obs influyentes, lo dejamos como esta 
+#lno afecta quitarle las obs influyentes, lo dejamos como esta 
 
 
 # =========================================================================
@@ -896,7 +896,6 @@ print(panel_IIIc)
 #   modelo_IIa  (Log-Log:  lnY ~ lnx1 + lnx2 + lnx4 + lnx6)
 #   modelo_IIIc (Log-Lin:  lnY ~ x1 + x3 + x6 + x7)
 #   modelo_IVa  (Estand.:  Ys ~ 0 + x1s + x3s + x4s + x5s + x6s + x7s)
-# Pégalo al final de tu script, después de la sección de validación.
 # =========================================================================
 
 # --- 1. Extraer métricas de cada modelo ---
