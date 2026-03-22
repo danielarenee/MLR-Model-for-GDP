@@ -570,12 +570,7 @@ cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):",
     if(length(obs_cook)>0) obs_cook else "Ninguno")
 cat("\n===========================================\n")
 
-# Al poner 'id.n=5', R marcará automáticamente las 5 observaciones más peligrosas.
-influencePlot(modelo_Ia, 
-              id=list(method="noteworthy", n=5, cex=0.8, col="red"),
-              main="Gráfico de Influencia: Modelo Ia (Puntos Seleccionados)",
-              xlab="Hat-Values (Leverage)", 
-              ylab="Residuales Estudentizados")
+
 
 # 2. EL DE PANELES: Gráfico de Influencia por Índice 
 par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
@@ -681,24 +676,6 @@ cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):",
 cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):", 
     if(length(obs_cook)>0) obs_cook else "Ninguno")
 cat("\n===========================================\n")
-
-# Gráfico 1: El que te gustó (Puntos seleccionados, sin burbujas gigantes)
-influencePlot(modelo_IIa, 
-              id=list(method="noteworthy", n=5, cex=0.8, col="red"),
-              main="Gráfico de Influencia: Modelo IIa (Log-Log)",
-              xlab="Hat-Values (Leverage)", 
-              ylab="Residuales Estudentizados")
-
-# Gráfico 2: El de Paneles por Índice (Súper claro)
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
-
-influenceIndexPlot(modelo_IIa, 
-                   vars = c("Cook", "Studentized", "hat"), 
-                   id = list(n = 5, cex = 0.7, col = "red"), 
-                   main = "Diagnóstico por Índice: Modelo IIa")
-
-# Restaurar pantalla a una sola gráfica
-par(mfrow = c(1, 1))
 
 # --- PASO 2: LIMPIEZA Y COMPARACIÓN DE SUPUESTOS (MODELO IIa: Log-Log) ---
 library(lmtest)
@@ -824,12 +801,6 @@ cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):",
     if(length(obs_cook)>0) obs_cook else "Ninguno")
 cat("\n===========================================\n")
 
-# Gráfico 1: Puntos de Influencia
-influencePlot(modelo_IIIc, 
-              id=list(method="noteworthy", n=5, cex=0.8, col="red"),
-              main="Gráfico de Influencia: Modelo IIIc (Log-Lin)",
-              xlab="Hat-Values (Leverage)", 
-              ylab="Residuales Estudentizados")
 
 # Gráfico 2: Paneles por Índice
 par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
@@ -945,6 +916,8 @@ print(panel_Ia)
 panel_IIa <- crear_panel_modelo(modelo_IIa, modelo_IIa_limpio, "Modelo IIa (Log-Log)")
 print(panel_IIa)
 
-# Gráfica 3: Log-Lin (El Campeón)
+# Gráfica 3: Log-Lin 
 panel_IIIc <- crear_panel_modelo(modelo_IIIc, modelo_IIIc_limpio, "Modelo IIIc (Log-Lin)")
 print(panel_IIIc)
+
+
