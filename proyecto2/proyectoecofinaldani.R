@@ -22,11 +22,11 @@ library(car)
 
 # datos
 
-##df <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales.csv")
-##head(df)
+df <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales.csv")
+head(df)
 #Ruta Mario abajo
-ruta <- file.choose()
-df<- read.csv(ruta)
+#ruta <- file.choose()
+#df<- read.csv(ruta)
 head(df)
 
 Ya  <- df$exportaciones_manufactureras
@@ -117,11 +117,11 @@ corrplot(correl_red, method = "color", type = "upper",
 # =====================================================
 
 # datos
-##df2 <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2.csv")
-##head(df2)
+df2 <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2.csv")
+head(df2)
 #Ruta Mario
-ruta1<- file.choose()
-df2<- read.csv(ruta1)
+#ruta1<- file.choose()
+#df2<- read.csv(ruta1)
 head(df2)
 
 
@@ -368,6 +368,21 @@ vif(modelo_IIIc)
 # la ventaja es que tenemos un modelo simple de pocas variables (principio de 
 # parsimonia), que además explica bien. hay que verificar supuestos !
 
+modelo_IIId <- lm(lnY ~ x1 + x3 + x6)
+summary(modelo_IIId)
+vif(modelo_IIId) 
+
+# Criterios de evaluación ------------- 
+cat("R^2 adj  =", summary(modelo_IIId)$adj.r.squared, "\n")
+cat("AIC      =", AIC(modelo_IIId), "\n")
+cat("BIC      =", BIC(modelo_IIId), "\n")
+
+# Stepwise ------------- 
+modelo_nulo_IIId <- lm(lnY ~ 1)
+step_IIId <- step(modelo_nulo_IIId,
+                  scope = list(lower = modelo_nulo_IIId, upper = modelo_IIId),
+                  direction = "both", trace = 1)
+summary(step_IIId)
 
 
 # -- MODELO IV: Estandarizado (Fuerza relativa) --------------------------------
@@ -375,11 +390,12 @@ vif(modelo_IIIc)
 # un cambio de Beta_j desviaciones estándar en Y. (Regresión al origen)
 
 # Ruta Mario
-ruta2 <- file.choose()
-df_std <- read.csv(ruta2)
+# ruta2 <- file.choose()
+# df_std <- read.csv(ruta2)
+df_std <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2_std.csv")
+
 head(df_std)
 
-# 1. ¡PRIMERO DEFINIMOS LAS VARIABLES!
 Ys  <- df_std$exportaciones_manufactureras
 x1s <- df_std$form_bruta_cap_fijo
 x2s <- df_std$ind_tipo_cambio_real
@@ -389,7 +405,7 @@ x5s <- df_std$vix
 x6s <- df_std$remesas
 x7s <- df_std$inflacion
 
-# 2. LUEGO CORREMOS EL MODELO (Regresión al origen con 0 +)
+# hacemos la regresión al origen...
 modelo_IV <- lm(Ys ~ 0 + x1s + x2s + x3s + x4s + x5s + x6s + x7s)
 summary(modelo_IV)
 anova(modelo_IV)
@@ -485,6 +501,23 @@ predict(modelo_IIIc, newdata = x0_III, interval = "confidence", level = 0.95)
 cat("Intervalo de predicción (Modelo IIIc)")
 predict(modelo_IIIc, newdata = x0_III, interval = "prediction", level = 0.95)
 
+
+# -- Modelo IIId (Log-Lin reducido) --------------------------------------------
+
+summary(modelo_IIId)
+confint(modelo_IIId, level = 0.95)
+anova(modelo_IIId)
+
+x0_IIId <- data.frame(
+  x1 = mean(x1), x3 = mean(x3), x6 = mean(x6)
+)
+
+cat("Intervalo de respuesta media (Modelo IIId) ")
+predict(modelo_IIId, newdata = x0_IIId, interval = "confidence", level = 0.95)
+
+cat("Intervalo de predicción (Modelo IIId) ")
+predict(modelo_IIId, newdata = x0_IIId, interval = "prediction", level = 0.95)
+
 # Nota: los intervalos de los modelos II y III están en escala ln(Y)
 # para llevarlos a escala original: exp(valor)...
 
@@ -495,23 +528,32 @@ pred_II <- predict(modelo_IIa, newdata = x0_II, interval = "prediction", level =
 cat("Respuesta media:\n"); print(exp(conf_II))
 cat("Predicción:\n"); print(exp(pred_II))
 
-# mod III
+# mod IIIc
 cat("Intervalos en escala original (Modelo IIIc)")
 conf_III <- predict(modelo_IIIc, newdata = x0_III, interval = "confidence", level = 0.95)
 pred_III <- predict(modelo_IIIc, newdata = x0_III, interval = "prediction", level = 0.95)
 cat("Respuesta media:\n"); print(exp(conf_III))
 cat("Predicción:\n"); print(exp(pred_III))
 
-# Nota: Los intervalos del IIIc son más estrechos que los del IIa 
+# mod IIId
+cat("Intervalos en escala original (Modelo IIId)")
+conf_IIId <- predict(modelo_IIId, newdata = x0_IIId, interval = "confidence", level = 0.95)
+pred_IIId <- predict(modelo_IIId, newdata = x0_IIId, interval = "prediction", level = 0.95)
+cat("Respuesta media:\n"); print(exp(conf_IIId))
+cat("Predicción:\n"); print(exp(pred_IIId))
+
+
+# Nota: Los intervalos del IIIc y IIId son más estrechos que los del IIa 
 # lo cual confirma que es mejor modelo. Aparte de esto, ya sabíamos que tiene
 # menor BIC
+# también notamos que el IIId tiene casi los mismos resutlados que el IIIc,
+# pero con una variable menos. esto respalda el principio de parsimonia
 
-
-#no tiene caso hacerlo para el esatandarizado ya que todas las medias son 0
+# no tiene caso hacerlo para el esatandarizado ya que todas las medias son 0
 
 #======================== 4. VALIDACIÓN DE MODELOS =========================
 
-#MODELO Ia (Lin-Lin)
+# MODELO Ia (Lin-Lin)
 library(lmtest)
 
 # 1. Extraer residuales
@@ -521,17 +563,20 @@ res_Ia <- residuals(modelo_Ia)
 # H0: Errores normales | Queremos p > 0.05
 cat("\n--- NORMALIDAD ---\n")
 print(shapiro.test(res_Ia))
+# no rechazamos (aka. lo cumple al 0.05)
 
 # 3. Homocedasticidad (Breusch-Pagan)
 # H0: Varianza constante | Queremos p > 0.05
 cat("\n--- HOMOCEDASTICIDAD ---\n")
 print(bptest(modelo_Ia))
+# no rechazamos (aka. lo cumple al 0.05)
 
 # 4. Autocorrelación Global (Ljung-Box)
 # H0: Independencia (Ruido Blanco) | Queremos p > 0.05
 # Usamos lag = 4 por ser datos trimestrales
 cat("\n--- AUTOCORRELACIÓN (Ljung-Box, lag=4) ---\n")
 print(Box.test(res_Ia, lag = 4, type = "Ljung-Box"))
+# rechazamos (NO CUMPLE)
 
 # 5. Visualización del Correlograma (ACF)
 # Las barras deben quedarse dentro de las líneas punteadas azules
@@ -548,7 +593,7 @@ res_stud <- rstudent(modelo_Ia)      # Estudentizados
 hats <- hatvalues(modelo_Ia)         # Leverages
 cooks <- cooks.distance(modelo_Ia)   # Distancia de Cook
 
-# B) Definición de Umbrales Teóricos (Notas de Clase)
+# B) Definición de Umbrales Teóricos 
 umbral_res <- 3                       # Regla de dedo para residuos grandes
 umbral_hat <- 2 * (k + 1) / n         # Regla 2p/n
 umbral_cook <- 4 / (n - k - 1)        # Regla 4/(n-k-1)
@@ -559,18 +604,13 @@ obs_leverage <- which(hats > umbral_hat)
 obs_cook <- which(cooks > umbral_cook)
 
 # D) Reporte Consolidado
-cat("\n===========================================")
 cat("\n   REPORTE DE OBSERVACIONES PROBLEMÁTICAS")
-cat("\n===========================================")
 cat("\n1. Outliers Criticos (Estudentizados > 3):", 
     if(length(obs_outliers)>0) obs_outliers else "Ninguno")
 cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):", 
     if(length(obs_leverage)>0) obs_leverage else "Ninguno")
 cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):", 
     if(length(obs_cook)>0) obs_cook else "Ninguno")
-cat("\n===========================================\n")
-
-
 
 # 2. EL DE PANELES: Gráfico de Influencia por Índice 
 par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
@@ -585,7 +625,7 @@ par(mfrow = c(1, 1))
 
 library(lmtest)
 
-# 1. Definimos los "culpables"
+# 1. Definimos los "culpables" :p
 obs_a_eliminar <- c(2, 56, 57, 122, 123)
 
 # Esto fuerza al modelo a recalcularse sin esas filas específicas
@@ -616,7 +656,6 @@ print(Box.test(residuals(modelo_Ia), lag = 4, type = "Ljung-Box"))
 cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
 print(Box.test(residuals(modelo_Ia_limpio), lag = 4, type = "Ljung-Box"))
 #Obs que mejora normalidad y homocedasticidad, autocorrelación noup
-
 
 # =========================================================================
 # VALIDACIÓN DE SUPUESTOS LOG-LOG (Modelo IIa)
@@ -666,16 +705,13 @@ obs_leverage <- which(hats > umbral_hat)
 obs_cook <- which(cooks > umbral_cook)
 
 # D) Reporte Consolidado
-cat("\n===========================================")
 cat("\n   REPORTE DE OBSERVACIONES PROBLEMÁTICAS (Log-Log)")
-cat("\n===========================================")
 cat("\n1. Outliers Criticos (Estudentizados > 3):", 
     if(length(obs_outliers)>0) obs_outliers else "Ninguno")
 cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):", 
     if(length(obs_leverage)>0) obs_leverage else "Ninguno")
 cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):", 
     if(length(obs_cook)>0) obs_cook else "Ninguno")
-cat("\n===========================================\n")
 
 # --- PASO 2: LIMPIEZA Y COMPARACIÓN DE SUPUESTOS (MODELO IIa: Log-Log) ---
 library(lmtest)
@@ -740,7 +776,7 @@ library(car)
 
 # A) Cálculo de métricas
 n <- nobs(modelo_IIIc)               
-k <- 4                               # Variables independientes en Modelo IIIc (x1, x3, x6, x7)
+k <- 4       # Variables independientes en Modelo IIIc (x1, x3, x6, x7)
 res_std <- rstandard(modelo_IIIc)    
 res_stud <- rstudent(modelo_IIIc)    
 hats <- hatvalues(modelo_IIIc)       
@@ -757,16 +793,13 @@ obs_leverage <- which(hats > umbral_hat)
 obs_cook <- which(cooks > umbral_cook)
 
 # D) Reporte Consolidado
-cat("\n===========================================")
 cat("\n   REPORTE DE OBSERVACIONES PROBLEMÁTICAS (Log-Lin)")
-cat("\n===========================================")
 cat("\n1. Outliers Criticos (Estudentizados > 3):", 
     if(length(obs_outliers)>0) obs_outliers else "Ninguno")
 cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):", 
     if(length(obs_leverage)>0) obs_leverage else "Ninguno")
 cat("\n3. Observaciones Influyentes (Cook >", round(umbral_cook, 4), "):", 
     if(length(obs_cook)>0) obs_cook else "Ninguno")
-cat("\n===========================================\n")
 
 
 # Gráfico 2: Paneles por Índice
@@ -812,6 +845,103 @@ cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
 print(Box.test(residuals(modelo_IIIc_limpio), lag = 4, type = "Ljung-Box"))
 
 #lno afecta quitarle las obs influyentes, lo dejamos como esta 
+
+
+# =========================================================================
+# VALIDACIÓN DE SUPUESTOS LOG-LIN (Modelo IIId)
+# =========================================================================
+library(lmtest)
+
+# 1. Extraer residuales
+res_IIId <- residuals(modelo_IIId)
+
+# 2. Normalidad (Shapiro-Wilk)
+cat("\n--- 1. NORMALIDAD (Modelo IIId) ---\n")
+print(shapiro.test(res_IIId))
+
+# 3. Homocedasticidad (Breusch-Pagan)
+cat("\n--- 2. HOMOCEDASTICIDAD (Modelo IIId) ---\n")
+print(bptest(modelo_IIId))
+
+# 4. Autocorrelación Global (Ljung-Box, lag=4)
+cat("\n--- 3. AUTOCORRELACIÓN (Modelo IIId) ---\n")
+print(Box.test(res_IIId, lag = 4, type = "Ljung-Box"))
+
+# 5. Visualización del Correlograma
+par(mfrow = c(1, 1))
+acf(res_IIId, main = "ACF de los Residuales - Modelo IIId (Log-Lin)")
+
+# --- DIAGNÓSTICO INTEGRAL DE INFLUENCIA (MODELO IIId: Log-Lin) ---
+library(car)
+
+# A) Cálculo de métricas
+n <- nobs(modelo_IIId)
+k <- 3  # Variables independientes en Modelo IIId (x1, x3, x6)
+res_std <- rstandard(modelo_IIId)
+res_stud <- rstudent(modelo_IIId)
+hats <- hatvalues(modelo_IIId)
+cooks <- cooks.distance(modelo_IIId)
+
+# B) Definición de Umbrales Teóricos
+umbral_res <- 3
+umbral_hat <- 2 * (k + 1) / n
+umbral_cook <- 4 / (n - k - 1)
+
+# C) Identificación de observaciones
+obs_outliers <- which(abs(res_stud) > umbral_res)
+obs_leverage <- which(hats > umbral_hat)
+obs_cook <- which(cooks > umbral_cook)
+
+# D) Criterio de clase (Di > 1)
+obs_cook_clase <- which(cooks > 1)
+
+# E) Reporte Consolidado
+cat("\n   REPORTE DE OBSERVACIONES PROBLEMÁTICAS (Log-Lin IIId)")
+cat("\n1. Outliers Criticos (Estudentizados > 3):",
+    if(length(obs_outliers)>0) obs_outliers else "Ninguno")
+cat("\n2. Puntos de Palanca (Leverage >", round(umbral_hat, 4), "):",
+    if(length(obs_leverage)>0) obs_leverage else "Ninguno")
+cat("\n3. Obs. Influyentes (Cook >", round(umbral_cook, 4), "):",
+    if(length(obs_cook)>0) obs_cook else "Ninguno")
+cat("\n4. Obs. Influyentes (Cook > 1, criterio de clase):",
+    if(length(obs_cook_clase)>0) obs_cook_clase else "Ninguno")
+
+# Gráfico: Paneles por Índice
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
+influenceIndexPlot(modelo_IIId,
+                   vars = c("Cook", "Studentized", "hat"),
+                   id = list(n = 5, cex = 0.7, col = "red"),
+                   main = "Diagnóstico por Índice: Modelo IIId")
+par(mfrow = c(1, 1))
+
+# --- LIMPIEZA Y COMPARACIÓN DE SUPUESTOS (MODELO IIId: Log-Lin) ---
+library(lmtest)
+
+obs_a_eliminar_IIId <- as.numeric(names(obs_cook))
+
+modelo_IIId_limpio <- update(modelo_IIId, subset = -obs_a_eliminar_IIId)
+
+cat("\n--- VERIFICACIÓN DE DATOS ---")
+cat("\nDatos en Modelo Original:", nobs(modelo_IIId))
+cat("\nDatos en Modelo Limpio:", nobs(modelo_IIId_limpio), "(Debe ser", length(obs_a_eliminar_IIId), "menos)\n")
+
+# A. Normalidad
+cat("\n--- NORMALIDAD MODELO ORIGINAL ---")
+print(shapiro.test(residuals(modelo_IIId)))
+cat("\n--- NORMALIDAD MODELO LIMPIO ---")
+print(shapiro.test(residuals(modelo_IIId_limpio)))
+
+# B. Homocedasticidad
+cat("\n--- HOMOCEDASTICIDAD MODELO ORIGINAL ---")
+print(bptest(modelo_IIId))
+cat("\n--- HOMOCEDASTICIDAD MODELO LIMPIO ---")
+print(bptest(modelo_IIId_limpio))
+
+# C. Autocorrelación
+cat("\n--- AUTOCORRELACIÓN MODELO ORIGINAL ---")
+print(Box.test(residuals(modelo_IIId), lag = 4, type = "Ljung-Box"))
+cat("\n--- AUTOCORRELACIÓN MODELO LIMPIO ---")
+print(Box.test(residuals(modelo_IIId_limpio), lag = 4, type = "Ljung-Box"))
 
 
 # =========================================================================
@@ -887,6 +1017,10 @@ print(panel_IIa)
 panel_IIIc <- crear_panel_modelo(modelo_IIIc, modelo_IIIc_limpio, "Modelo IIIc (Log-Lin)")
 print(panel_IIIc)
 
+# Gráfica 4: Log-Lin 
+panel_IIId <- crear_panel_modelo(modelo_IIId, modelo_IIId_limpio, "Modelo IIId (Log-Lin)")
+print(panel_IIId)
+
 
 # =========================================================================
 # TABLA COMPARATIVA DE MODELOS FINALES
@@ -925,28 +1059,48 @@ tabla <- rbind(
 
 rownames(tabla) <- NULL
 
-cat("\n=====================================================\n")
+
+# =========================================================================
+# TABLA COMPARATIVA DE MODELOS FINALES (incluyendo IIId)
+# =========================================================================
+
+extraer_metricas <- function(modelo, nombre, tipo) {
+  s <- summary(modelo)
+  data.frame(
+    Modelo          = nombre,
+    Tipo            = tipo,
+    Num_Variables   = length(coef(modelo)) - ifelse(attr(modelo$terms, "intercept") == 1, 1, 0),
+    R2              = round(s$r.squared, 4),
+    R2_adj          = round(s$adj.r.squared, 4),
+    AIC             = round(AIC(modelo), 2),
+    BIC             = round(BIC(modelo), 2),
+    Error_Estandar  = round(s$sigma, 4),
+    F_global        = round(s$fstatistic[1], 2),
+    p_valor_F       = format.pval(pf(s$fstatistic[1], s$fstatistic[2], s$fstatistic[3], lower.tail = FALSE), digits = 4)
+  )
+}
+
+tabla <- rbind(
+  extraer_metricas(modelo_Ia,   "Ia (Lin-Lin)",       "Y ~ X"),
+  extraer_metricas(modelo_IIa,  "IIa (Log-Log)",      "ln(Y) ~ ln(X)"),
+  extraer_metricas(modelo_IIIc, "IIIc (Log-Lin)",     "ln(Y) ~ X"),
+  extraer_metricas(modelo_IIId, "IIId (Log-Lin red.)", "ln(Y) ~ X"),
+  extraer_metricas(modelo_IVa,  "IVa (Estand.)",      "Y* ~ X* (sin intercepto)")
+)
+
+rownames(tabla) <- NULL
+
 cat("     TABLA COMPARATIVA DE MODELOS FINALES\n")
-cat("=====================================================\n\n")
 print(tabla, right = FALSE)
 
-# --- 2. Comparación justa entre modelos con la misma respuesta ---
-# 
-# IMPORTANTE: AIC y BIC solo son comparables directamente cuando la 
-# variable respuesta es la misma. Modelo Ia tiene Y, mientras que IIa 
-# y IIIc tienen ln(Y). Para compararlos correctamente, calculamos el 
-# AIC "corregido" que penaliza la transformación logarítmica usando 
-# el Jacobiano: AIC_corregido = AIC_lnY - 2 * sum(log(Y))
-#
-# Referencia: si ln(Y) es la respuesta, la log-verosimilitud en la 
-# escala original de Y requiere sumar el Jacobiano de la transformación.
+# --- 2. Comparación justa AIC/BIC (corrección Jacobiana) ---
 
-jacobiano <- -2 * sum(log(Y))  # Corrección por cambio de variable
+jacobiano <- -2 * sum(log(Y))
 
 tabla_comparable <- data.frame(
-  Modelo     = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)"),
-  AIC_orig   = round(c(AIC(modelo_Ia), AIC(modelo_IIa) - jacobiano, AIC(modelo_IIIc) - jacobiano), 2),
-  BIC_orig   = round(c(BIC(modelo_Ia), BIC(modelo_IIa) - jacobiano, BIC(modelo_IIIc) - jacobiano), 2)
+  Modelo     = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)", "IIId (Log-Lin red.)"),
+  AIC_orig   = round(c(AIC(modelo_Ia), AIC(modelo_IIa) - jacobiano, AIC(modelo_IIIc) - jacobiano, AIC(modelo_IIId) - jacobiano), 2),
+  BIC_orig   = round(c(BIC(modelo_Ia), BIC(modelo_IIa) - jacobiano, BIC(modelo_IIIc) - jacobiano, BIC(modelo_IIId) - jacobiano), 2)
 )
 
 cat("\n=====================================================\n")
@@ -955,27 +1109,28 @@ cat("=====================================================\n")
 cat("  (Corrección Jacobiana para modelos con ln(Y))\n\n")
 print(tabla_comparable, right = FALSE, row.names = FALSE)
 
-# --- 3. Ancho de intervalos de predicción (en escala original) ---
+# --- 3. Intervalos de predicción (escala original) ---
 
-# Punto de evaluación: medias de las regresoras de cada modelo
-x0_Ia  <- data.frame(x1=mean(x1), x3=mean(x3), x4=mean(x4), x5=mean(x5), x6=mean(x6), x7=mean(x7))
-x0_IIa <- data.frame(lnx1=mean(lnx1), lnx2=mean(lnx2), lnx4=mean(lnx4), lnx6=mean(lnx6))
-x0_IIIc<- data.frame(x1=mean(x1), x3=mean(x3), x6=mean(x6), x7=mean(x7))
+x0_Ia   <- data.frame(x1=mean(x1), x3=mean(x3), x4=mean(x4), x5=mean(x5), x6=mean(x6), x7=mean(x7))
+x0_IIa  <- data.frame(lnx1=mean(lnx1), lnx2=mean(lnx2), lnx4=mean(lnx4), lnx6=mean(lnx6))
+x0_IIIc <- data.frame(x1=mean(x1), x3=mean(x3), x6=mean(x6), x7=mean(x7))
+x0_IIId <- data.frame(x1=mean(x1), x3=mean(x3), x6=mean(x6))
 
 pred_Ia   <- predict(modelo_Ia,   newdata = x0_Ia,   interval = "prediction", level = 0.95)
 pred_IIa  <- predict(modelo_IIa,  newdata = x0_IIa,  interval = "prediction", level = 0.95)
 pred_IIIc <- predict(modelo_IIIc, newdata = x0_IIIc, interval = "prediction", level = 0.95)
+pred_IIId <- predict(modelo_IIId, newdata = x0_IIId, interval = "prediction", level = 0.95)
 
-# Para IIa y IIIc, transformamos a escala original con exp()
 ancho_pred <- data.frame(
-  Modelo        = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)"),
-  Pred_Inferior = round(c(pred_Ia[,"lwr"], exp(pred_IIa[,"lwr"]), exp(pred_IIIc[,"lwr"])), 2),
-  Pred_Ajustado = round(c(pred_Ia[,"fit"], exp(pred_IIa[,"fit"]), exp(pred_IIIc[,"fit"])), 2),
-  Pred_Superior = round(c(pred_Ia[,"upr"], exp(pred_IIa[,"upr"]), exp(pred_IIIc[,"upr"])), 2),
+  Modelo        = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)", "IIId (Log-Lin red.)"),
+  Pred_Inferior = round(c(pred_Ia[,"lwr"], exp(pred_IIa[,"lwr"]), exp(pred_IIIc[,"lwr"]), exp(pred_IIId[,"lwr"])), 2),
+  Pred_Ajustado = round(c(pred_Ia[,"fit"], exp(pred_IIa[,"fit"]), exp(pred_IIIc[,"fit"]), exp(pred_IIId[,"fit"])), 2),
+  Pred_Superior = round(c(pred_Ia[,"upr"], exp(pred_IIa[,"upr"]), exp(pred_IIIc[,"upr"]), exp(pred_IIId[,"upr"])), 2),
   Ancho_IC      = round(c(
-    pred_Ia[,"upr"]       - pred_Ia[,"lwr"],
-    exp(pred_IIa[,"upr"]) - exp(pred_IIa[,"lwr"]),
-    exp(pred_IIIc[,"upr"])- exp(pred_IIIc[,"lwr"])
+    pred_Ia[,"upr"]        - pred_Ia[,"lwr"],
+    exp(pred_IIa[,"upr"])  - exp(pred_IIa[,"lwr"]),
+    exp(pred_IIIc[,"upr"]) - exp(pred_IIIc[,"lwr"]),
+    exp(pred_IIId[,"upr"]) - exp(pred_IIId[,"lwr"])
   ), 2)
 )
 
@@ -987,37 +1142,34 @@ print(ancho_pred, right = FALSE, row.names = FALSE)
 
 # --- 4. Resumen de validación de supuestos ---
 
-cat("\n=====================================================\n")
-cat("  RESUMEN DE VALIDACIÓN DE SUPUESTOS (p-valores)\n")
-cat("=====================================================\n\n")
-
 resumen_supuestos <- data.frame(
-  Modelo          = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)"),
+  Modelo          = c("Ia (Lin-Lin)", "IIa (Log-Log)", "IIIc (Log-Lin)", "IIId (Log-Lin red.)"),
   Shapiro_p       = round(c(
     shapiro.test(residuals(modelo_Ia))$p.value,
     shapiro.test(residuals(modelo_IIa))$p.value,
-    shapiro.test(residuals(modelo_IIIc))$p.value
+    shapiro.test(residuals(modelo_IIIc))$p.value,
+    shapiro.test(residuals(modelo_IIId))$p.value
   ), 4),
   BP_p            = round(c(
     bptest(modelo_Ia)$p.value,
     bptest(modelo_IIa)$p.value,
-    bptest(modelo_IIIc)$p.value
+    bptest(modelo_IIIc)$p.value,
+    bptest(modelo_IIId)$p.value
   ), 4),
   LjungBox_p      = round(c(
     Box.test(residuals(modelo_Ia),   lag=4, type="Ljung-Box")$p.value,
     Box.test(residuals(modelo_IIa),  lag=4, type="Ljung-Box")$p.value,
-    Box.test(residuals(modelo_IIIc), lag=4, type="Ljung-Box")$p.value
+    Box.test(residuals(modelo_IIIc), lag=4, type="Ljung-Box")$p.value,
+    Box.test(residuals(modelo_IIId), lag=4, type="Ljung-Box")$p.value
   ), 4)
 )
 
-# Agregar columna de diagnóstico (pasa / no pasa al 0.05)
 resumen_supuestos$Normalidad     <- ifelse(resumen_supuestos$Shapiro_p > 0.05, "OK", "FALLA")
 resumen_supuestos$Homocedast     <- ifelse(resumen_supuestos$BP_p > 0.05, "OK", "FALLA")
 resumen_supuestos$Independencia  <- ifelse(resumen_supuestos$LjungBox_p > 0.05, "OK", "FALLA")
 
+cat("  RESUMEN DE VALIDACIÓN DE SUPUESTOS (p-valores)\n")
 print(resumen_supuestos, right = FALSE, row.names = FALSE)
 
-cat("\n=====================================================\n")
 cat("  Nota: 'OK' = no se rechaza H0 al 5%\n")
 cat("        'FALLA' = se rechaza H0 al 5%\n")
-cat("=====================================================\n")
