@@ -821,11 +821,8 @@ print(panel_IIId_alt)
 
 
 
-# =====================================================================
-# GRÁFICAS DE NORMALIDAD (HISTOGRAMA + Q-Q PLOT) EN ESPAÑOL
-# =====================================================================
+# GRÁFICAS DE NORMALIDAD (HISTOGRAMA y Q-Q PLOT)
 
-# Función auxiliar para generar el panel de normalidad en español
 graficar_normalidad_esp <- function(modelo, nombre_modelo) {
   residuos <- residuals(modelo)
   
@@ -836,7 +833,6 @@ graficar_normalidad_esp <- function(modelo, nombre_modelo) {
   h <- hist(residuos, breaks = 15, plot = FALSE)
   x_vals <- seq(min(residuos), max(residuos), length = 100)
   y_vals <- dnorm(x_vals, mean = mean(residuos), sd = sd(residuos))
-  # Ajuste de escala para que la curva coincida con la frecuencia del histograma
   y_vals <- y_vals * diff(h$mids[1:2]) * length(residuos)
   
   plot(h, main = paste("Histograma de Residuales\n", nombre_modelo),
@@ -849,12 +845,11 @@ graficar_normalidad_esp <- function(modelo, nombre_modelo) {
          pch = 19, col = adjustcolor("#2980B9", alpha.f = 0.5))
   qqline(residuos, col = "red", lwd = 2)
   
-  # Restaurar a un solo panel
+  
   par(mfrow = c(1, 1))
 }
 
-# Generar las 4 imágenes (una por cada modelo)
-# Recuerda usar Export -> Save as Image en RStudio con un ancho de 1000px
+# Generar las 4 graficas 
 
 # Modelo Ia
 graficar_normalidad_esp(modelo_Ia, "Modelo Ia (Lin-Lin)")
