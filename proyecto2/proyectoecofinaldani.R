@@ -5,7 +5,7 @@ library(car)
 
 #========================== 1. ELECCIÓN DE VARIABLES ===========================
 
-############################## RONDA 1 #######################################
+############################# RONDA 1 #######################################
 
 # RLM =====================================================
 # Variable respuesta: Exportaciones manufactureras (Y)
@@ -22,11 +22,11 @@ library(car)
 
 # datos
 
-df <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales.csv")
-head(df)
+#df <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales.csv")
+#head(df)
 #Ruta Mario abajo
-#ruta <- file.choose()
-#df<- read.csv(ruta)
+ruta <- file.choose()
+df<- read.csv(ruta)
 head(df)
 
 Ya  <- df$exportaciones_manufactureras
@@ -117,11 +117,11 @@ corrplot(correl_red, method = "color", type = "upper",
 # =====================================================
 
 # datos
-df2 <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2.csv")
-head(df2)
+#df2 <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2.csv")
+#head(df2)
 #Ruta Mario
-#ruta1<- file.choose()
-#df2<- read.csv(ruta1)
+ruta1<- file.choose()
+df2<- read.csv(ruta1)
 head(df2)
 
 
@@ -390,9 +390,9 @@ summary(step_IIId)
 # un cambio de Beta_j desviaciones estándar en Y. (Regresión al origen)
 
 # Ruta Mario
-# ruta2 <- file.choose()
-# df_std <- read.csv(ruta2)
-df_std <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2_std.csv")
+ruta2 <- file.choose()
+df_std <- read.csv(ruta2)
+#df_std <- read.csv("/Users/danielarenee/Desktop/MLR-Model-for-GDP/proyecto2/datos_trimestrales2_std.csv")
 
 head(df_std)
 
@@ -601,6 +601,7 @@ validar_modelo <- function(modelo, nombre, k) {
   cat("\n=========================================================================\n")
   
   res_estand <- rstandard(modelo)
+  res_stud <- rstudent(modelo)
   hats <- hatvalues(modelo)
   cooks <- cooks.distance(modelo)
   
@@ -608,19 +609,26 @@ validar_modelo <- function(modelo, nombre, k) {
   umbral_res <- 3
   umbral_hat <- 2 * (k + 1) / n
   
+  # Umbral teórico para estudentizados (t de Student)
+  alpha <- 0.05
+  gl_t <- (n - 1) - k - 1
+  umbral_stud <- qt(1 - alpha/2, df = gl_t)
+  
   # Identificación
   obs_atipicos <- which(abs(res_estand) > umbral_res)
+  obs_atipicos_stud <- which(abs(res_stud) > umbral_stud)
   obs_apalancamiento <- which(hats > umbral_hat)
   obs_influyentes <- which(cooks > 1)
   
-  cat("\n1. Valores atípicos (estandarizados > 3):",
+ cat("\n1. Valores atípicos (estandarizados > 3):",
       if(length(obs_atipicos) > 0) obs_atipicos else "Ninguno")
-  cat("\n2. Puntos de apalancamiento (h_ii >", round(umbral_hat, 4), "):",
+  cat("\n2. Valores atípicos (estudentizados >", round(umbral_stud, 4), "):",
+      if(length(obs_atipicos_stud) > 0) obs_atipicos_stud else "Ninguno")
+  cat("\n3. Puntos de apalancamiento (h_ii >", round(umbral_hat, 4), "):",
       if(length(obs_apalancamiento) > 0) obs_apalancamiento else "Ninguno")
-  cat("\n3. Observaciones influyentes (D_i > 1):",
+  cat("\n4. Observaciones influyentes (D_i > 1):",
       if(length(obs_influyentes) > 0) obs_influyentes else "Ninguno")
-  cat("\n=========================================================================\n")
-  
+  #############################################################################
   # Gráfico de diagnóstico por índice
   par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
   influenceIndexPlot(modelo,
@@ -636,6 +644,7 @@ validar_modelo <- function(modelo, nombre, k) {
   
   return(list(
     obs_atipicos = obs_atipicos,
+    obs_atipicos_stud = obs_atipicos_stud,
     obs_apalancamiento = obs_apalancamiento,
     obs_influyentes = obs_influyentes,
     top5_cook = top5_cook
