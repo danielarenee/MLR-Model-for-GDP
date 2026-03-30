@@ -629,14 +629,26 @@ validar_modelo <- function(modelo, nombre, k) {
   cat("\n4. Observaciones influyentes (D_i > 1):",
       if(length(obs_influyentes) > 0) obs_influyentes else "Ninguno")
   #############################################################################
-  # Gráfico de diagnóstico por índice
+  # Gráfico de diagnóstico por índice (Solución definitiva para ejes en español)
   par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
+  
+  # Ejecutamos la función omitiendo las etiquetas internas para evitar el error
   influenceIndexPlot(modelo,
                      vars = c("Cook", "Studentized", "hat"),
                      id = list(n = 5, cex = 0.7, col = "red"),
                      main = paste("Diagnóstico por Índice:", nombre))
+  
+  # 3. Restauramos la configuración de un solo panel
   par(mfrow = c(1, 1))
   
+  # Agregamos manualmente las etiquetas en los márgenes de cada panel
+  # Side 2 es el eje Y. Side 1 es el eje X.
+  mtext("Distancia de Cook", side = 2, line = 2.5, at = 0.85, outer = TRUE, cex = 0.8)
+  mtext("Resid. Estudentizados", side = 2, line = 2.5, at = 0.50, outer = TRUE, cex = 0.8)
+  mtext("Valores Sombrero", side = 2, line = 2.5, at = 0.15, outer = TRUE, cex = 0.8)
+  mtext("Índice de observación", side = 1, line = -1.5, outer = TRUE, cex = 0.8)
+  
+  par(mfrow = c(1, 1))
   # Las 5 observaciones con mayor distancia de Cook (para ejercicio diagnóstico)
   top5_cook <- order(cooks, decreasing = TRUE)[1:5]
   cat("\n5 observaciones con mayor distancia de Cook:", top5_cook, "\n")
@@ -809,3 +821,49 @@ print(panel_IIId_alt)
 
 
 
+# =====================================================================
+# GRÁFICAS DE NORMALIDAD (HISTOGRAMA + Q-Q PLOT) EN ESPAÑOL
+# =====================================================================
+
+# Función auxiliar para generar el panel de normalidad en español
+graficar_normalidad_esp <- function(modelo, nombre_modelo) {
+  residuos <- residuals(modelo)
+  
+  # Configurar panel de 1 fila y 2 columnas
+  par(mfrow = c(1, 2), mar = c(5, 4, 4, 2))
+  
+  # 1. Histograma con curva normal teórica
+  h <- hist(residuos, breaks = 15, plot = FALSE)
+  x_vals <- seq(min(residuos), max(residuos), length = 100)
+  y_vals <- dnorm(x_vals, mean = mean(residuos), sd = sd(residuos))
+  # Ajuste de escala para que la curva coincida con la frecuencia del histograma
+  y_vals <- y_vals * diff(h$mids[1:2]) * length(residuos)
+  
+  plot(h, main = paste("Histograma de Residuales\n", nombre_modelo),
+       xlab = "Residuales", ylab = "Frecuencia", col = "#2980B9", border = "white")
+  lines(x_vals, y_vals, col = "red", lwd = 2)
+  
+  # 2. Gráfica Cuantil-Cuantil (Q-Q Plot)
+  qqnorm(residuos, main = paste("Gráfica Cuantil-Cuantil\n", nombre_modelo),
+         xlab = "Cuantiles Teóricos", ylab = "Cuantiles de los Muestreo",
+         pch = 19, col = adjustcolor("#2980B9", alpha.f = 0.5))
+  qqline(residuos, col = "red", lwd = 2)
+  
+  # Restaurar a un solo panel
+  par(mfrow = c(1, 1))
+}
+
+# Generar las 4 imágenes (una por cada modelo)
+# Recuerda usar Export -> Save as Image en RStudio con un ancho de 1000px
+
+# Modelo Ia
+graficar_normalidad_esp(modelo_Ia, "Modelo Ia (Lin-Lin)")
+
+# Modelo IIa
+graficar_normalidad_esp(modelo_IIa, "Modelo IIa (Log-Log)")
+
+# Modelo IIIc
+graficar_normalidad_esp(modelo_IIIc, "Modelo IIIc (Log-Lin)")
+
+# Modelo IIId
+graficar_normalidad_esp(modelo_IIId, "Modelo IIId (Log-Lin)")
